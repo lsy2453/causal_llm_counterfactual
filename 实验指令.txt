@@ -1,0 +1,4 @@
+python -W ignore examples/run_benchmark_suite.py --benchmark psa --method contrastive --selector kimi --num_trials 5 --llm_log_dir runs/llm_logs/kimi --verbose
+
+
+python -W ignore examples/run_benchmark_suite.py --benchmark psa --method contrastive --selector dashscope --num_trials 5 --llm_log_dir runs/llm_logs/dashscope --verbose
