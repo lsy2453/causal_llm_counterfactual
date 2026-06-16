@@ -17,6 +17,7 @@ from ..benchmarks import (
 )
 from ..candidate_pool import build_near_tie_pool
 from ..contrast_pool import ContrastPoolBuilder
+from ..explanations import LLMExplanationGenerator, TemplateExplanationGenerator
 from ..llm_selectors import HeuristicContrastSelector, dashscope_contrast_selector, kimi_contrast_selector
 from ..posterior import posterior_interventional_contrast
 from ..scoring import ContrastScoreConfig, hard_weighted_score
@@ -47,6 +48,8 @@ class ExperimentConfig:
     kimi_model: str = "kimi-k2.6"
     dashscope_model: str = "qwen-plus"
     verbose: bool = False
+    explanation_generator: str = "template"
+    explanation_log_dir: str | None = None
 
 
 def get_benchmark(name: str) -> CausalBenchmark:
@@ -76,6 +79,7 @@ def run_first_version_benchmark(config: ExperimentConfig) -> BenchmarkResult:
 
     records: List[EvaluationRecord] = []
     all_contrast_results = []
+    explanations = []
 
     for step in range(config.num_trials):
         if config.verbose:
@@ -298,6 +302,19 @@ def run_first_version_benchmark(config: ExperimentConfig) -> BenchmarkResult:
             print(f"[Best-found new trials only] {curve_so_far[-1]:.6f}")
             print(f"[Best-found including initial data] {curve_with_initial[-1]:.6f}")
 
+        explanation = _make_explanation_generator(config).generate(
+            selected=selected,
+            intervention_space=intervention_set.space,
+            contrast_results=all_contrast_results,
+            context=benchmark.explanation_context(),
+            task=benchmark.task,
+        )
+        explanations.append(explanation)
+        if config.verbose:
+            print("[Faithful explanation]")
+            print(f"  generator={explanation.generator} fidelity_ok={explanation.fidelity_ok}")
+            print(f"  {explanation.text}")
+
     curve_new_trials = best_found_curve(records, benchmark.task)
     curve_including_initial = _best_found_curve_including_initial(
         initial_best_y,
@@ -318,6 +335,9 @@ def run_first_version_benchmark(config: ExperimentConfig) -> BenchmarkResult:
         "best_found_curve_including_initial_data": list(curve_including_initial),
         "initial_best_y": float(initial_best_y),
         "contrast_type_distribution": _contrast_type_distribution(all_contrast_results),
+        "explanation_fidelity_rate": _explanation_fidelity_rate(explanations),
+        "latest_explanation": explanations[-1].text if explanations else "",
+        "latest_explanation_generator": explanations[-1].generator if explanations else "",
     }
     return BenchmarkResult(
         benchmark_name=benchmark.name,
@@ -378,6 +398,32 @@ def _make_selector(config: ExperimentConfig):
             fallback_selector=fallback,
         )
     raise ValueError(f"Unknown selector: {config.selector}")
+
+
+def _make_explanation_generator(config: ExperimentConfig):
+    if config.explanation_generator == "template":
+        return TemplateExplanationGenerator()
+    if config.explanation_generator == "kimi":
+        return LLMExplanationGenerator(
+            kimi_contrast_selector(
+                model=config.kimi_model,
+                max_selected=3,
+                log_dir=None,
+                fallback_selector=HeuristicContrastSelector(max_selected=3),
+            ),
+            log_dir=config.explanation_log_dir,
+        )
+    if config.explanation_generator == "dashscope":
+        return LLMExplanationGenerator(
+            dashscope_contrast_selector(
+                model=config.dashscope_model,
+                max_selected=3,
+                log_dir=None,
+                fallback_selector=HeuristicContrastSelector(max_selected=3),
+            ),
+            log_dir=config.explanation_log_dir,
+        )
+    raise ValueError(f"Unknown explanation_generator: {config.explanation_generator}")
 
 
 def _apply_selection_constraints(
@@ -505,3 +551,9 @@ def _contrast_type_distribution(results: List[ContrastResult]) -> Dict[str, floa
     counts = Counter(result.contrast.contrast_type for result in results)
     total = float(sum(counts.values()))
     return {key: value / total for key, value in sorted(counts.items())}
+
+
+def _explanation_fidelity_rate(explanations) -> float:
+    if not explanations:
+        return 0.0
+    return float(np.mean([item.fidelity_ok for item in explanations]))

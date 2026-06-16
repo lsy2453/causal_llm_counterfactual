@@ -69,13 +69,20 @@ python -W ignore examples/run_benchmark_suite.py --benchmark toy --method contra
 PSAHealth with Kimi:
 
 ```powershell
-python -W ignore examples/run_benchmark_suite.py --benchmark psa --method contrastive --selector kimi --num_trials 5 --llm_log_dir runs/llm_logs/kimi --verbose
+python -W ignore examples/run_benchmark_suite.py --benchmark psa --method contrastive --selector kimi --num_trials 5 --llm_log_dir runs/llm_logs/kimi --explanation_generator template --verbose
 ```
 
 PSAHealth with DashScope/Qwen:
 
 ```powershell
-python -W ignore examples/run_benchmark_suite.py --benchmark psa --method contrastive --selector dashscope --num_trials 5 --llm_log_dir runs/llm_logs/dashscope --verbose
+python -W ignore examples/run_benchmark_suite.py --benchmark psa --method contrastive --selector dashscope --num_trials 5 --llm_log_dir runs/llm_logs/dashscope --explanation_generator template --verbose
+```
+
+To let the LLM generate the final faithful explanation from structured
+contrast evidence:
+
+```powershell
+python -W ignore examples/run_benchmark_suite.py --benchmark psa --method contrastive --selector kimi --explanation_generator kimi --llm_log_dir runs/llm_logs/kimi --explanation_log_dir runs/explanations/kimi --verbose
 ```
 
 ## Tests

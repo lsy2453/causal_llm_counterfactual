@@ -147,6 +147,7 @@ Verbose mode prints:
 - posterior interventional contrast results `g(a)-g(b)`
 - discriminability, uncertainty, and CFScore
 - final selected intervention and do-evaluation
+- faithful explanation generated from structured contrast evidence
 
 The current experimental design includes the main PSAHealth fixes:
 
@@ -163,4 +164,14 @@ To ablate the new scoring and constraints:
 ```bash
 python examples/run_benchmark_suite.py --benchmark psa --method contrastive --selector kimi --disable_hard_weighting
 python examples/run_benchmark_suite.py --benchmark psa --method contrastive --selector kimi --max_historical_contrasts 3 --min_local_contrasts 0
+```
+
+Explanation generation:
+
+```bash
+# Deterministic template explanation.
+python examples/run_benchmark_suite.py --benchmark psa --method contrastive --selector kimi --explanation_generator template --verbose
+
+# LLM explanation constrained to structured evidence.
+python examples/run_benchmark_suite.py --benchmark psa --method contrastive --selector kimi --explanation_generator kimi --explanation_log_dir runs/explanations/kimi --verbose
 ```

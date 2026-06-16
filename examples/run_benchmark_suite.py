@@ -25,6 +25,8 @@ def main() -> None:
     parser.add_argument("--kimi_model", default="kimi-k2.6")
     parser.add_argument("--dashscope_model", default="qwen-plus")
     parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("--explanation_generator", default="template", choices=["template", "kimi", "dashscope"])
+    parser.add_argument("--explanation_log_dir", default=None)
     parser.add_argument("--disable_hard_weighting", action="store_true")
     parser.add_argument("--max_historical_contrasts", default=1, type=int)
     parser.add_argument("--min_local_contrasts", default=1, type=int)
@@ -43,6 +45,8 @@ def main() -> None:
             kimi_model=args.kimi_model,
             dashscope_model=args.dashscope_model,
             verbose=args.verbose,
+            explanation_generator=args.explanation_generator,
+            explanation_log_dir=args.explanation_log_dir,
             use_hard_weighting=not args.disable_hard_weighting,
             max_historical_contrasts=args.max_historical_contrasts,
             min_local_contrasts=args.min_local_contrasts,

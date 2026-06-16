@@ -9,6 +9,7 @@ typically g(a) - g(b), where g(x) = E[Y | do(X=x)].
 
 from .candidate_pool import build_near_tie_pool
 from .contrast_pool import ContrastPoolBuilder
+from .explanations import Explanation, LLMExplanationGenerator, TemplateExplanationGenerator
 from .integration import candidates_from_cbo_outputs, selected_source_index
 from .llm_selectors import (
     HeuristicContrastSelector,
@@ -34,9 +35,11 @@ __all__ = [
     "ContrastValidator",
     "ContrastiveDecisionLayer",
     "DecisionLayerResult",
+    "Explanation",
     "HeuristicContrastSelector",
     "InterventionCandidate",
     "InterventionSpace",
+    "LLMExplanationGenerator",
     "LLMContrastSelector",
     "OpenAICompatibleContrastSelector",
     "build_near_tie_pool",
@@ -44,4 +47,5 @@ __all__ = [
     "dashscope_contrast_selector",
     "kimi_contrast_selector",
     "selected_source_index",
+    "TemplateExplanationGenerator",
 ]
